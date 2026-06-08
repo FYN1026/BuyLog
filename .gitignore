@@ -1,0 +1,26 @@
+# 编译生成的文件（每次构建都会自动生成，不需要上传）
+build/
+.gradle/
+app/build/
+
+# 本地配置文件（每台电脑不一样，不能共用）
+local.properties
+*.iml
+
+# Android Studio 的 IDE 配置文件
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/.gitignore
+.idea/deploymentTargetDropDown.xml
+.idea/render.experimental.xml
+
+# 系统生成的垃圾文件
+.DS_Store        # Mac 系统
+Thumbs.db        # Windows 系统
+
+# 签名文件（非常重要！密钥绝对不能上传）
+*.jks
+*.keystore
+keystore.properties
