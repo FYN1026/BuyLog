@@ -1,5 +1,15 @@
 package com.buylog.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,14 +21,12 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,72 +35,91 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Data class representing an item in the capsule bottom navigation.
+ */
+data class BottomNavItem(
+    val icon: ImageVector,
+    val label: String
+)
+
 @Composable
 fun CapsuleBottomNav(
+    items: List<BottomNavItem>,
     selectedIndex: Int,
-    onItemSelected: (Int) -> Unit
+    onItemSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val items = listOf(
-        Pair(Icons.Default.Home, "首页"),
-        Pair(Icons.Default.Home, "记录"),
-        Pair(Icons.Default.Settings, "设置")
-    )
-
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 16.dp)
             .navigationBarsPadding(),
         contentAlignment = Alignment.Center
     ) {
-        // 胶囊背景
+        // Capsule Background
         Surface(
             modifier = Modifier
                 .wrapContentWidth()
                 .height(64.dp),
-            shape = RoundedCornerShape(32.dp),  // 关键：圆角=高度一半
-            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = RoundedCornerShape(32.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
             shadowElevation = 8.dp
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items.forEachIndexed { index, item ->
                     val isSelected = selectedIndex == index
 
-                    // 选中项有高亮背景
+                    val backgroundColor by animateColorAsState(
+                        targetValue = if (isSelected)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            Color.Transparent,
+                        animationSpec = spring(stiffness = Spring.StiffnessLow),
+                        label = "backgroundColor"
+                    )
+
+                    val contentColor by animateColorAsState(
+                        targetValue = if (isSelected)
+                            MaterialTheme.colorScheme.onPrimary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        animationSpec = spring(stiffness = Spring.StiffnessLow),
+                        label = "contentColor"
+                    )
+
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(24.dp))
-                            .background(
-                                if (isSelected)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    Color.Transparent
-                            )
+                            .background(backgroundColor)
                             .clickable { onItemSelected(index) }
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(
-                                imageVector = item.first,
-                                contentDescription = item.second,
-                                tint = if (isSelected)
-                                    Color.White
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                imageVector = item.icon,
+                                contentDescription = item.label,
+                                tint = contentColor
                             )
-                            // 选中时显示文字
-                            if (isSelected) {
+                            
+                            AnimatedVisibility(
+                                visible = isSelected,
+                                enter = expandHorizontally() + fadeIn(),
+                                exit = shrinkHorizontally() + fadeOut()
+                            ) {
                                 Text(
-                                    text = item.second,
-                                    color = Color.White,
-                                    fontSize = 14.sp
+                                    text = item.label,
+                                    color = contentColor,
+                                    fontSize = 14.sp,
+                                    maxLines = 1
                                 )
                             }
                         }
