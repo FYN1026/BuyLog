@@ -93,13 +93,13 @@ fun MainScreen() {
 @Composable
 fun ClipboardLinkHandler(viewModel: HomeViewModel) {
     val context = LocalContext.current
-    // 🌟 获取当前窗口的状态信息
+    // 获取当前窗口的状态信息
     val windowInfo = LocalWindowInfo.current
 
     val showDialog by viewModel.showClipboardDialog.collectAsState()
     val detectedLink by viewModel.detectedLink.collectAsState()
 
-    // 🌟 核心修改：使用 LaunchedEffect 监听 isWindowFocused 的变化
+    // 使用 LaunchedEffect 监听 isWindowFocused 的变化
     LaunchedEffect(windowInfo.isWindowFocused) {
         // 只有当窗口真正获得焦点（比如刚打开 App 画面加载完毕，或者从桌面切回 App）
         if (windowInfo.isWindowFocused) {
@@ -107,7 +107,7 @@ fun ClipboardLinkHandler(viewModel: HomeViewModel) {
         }
     }
 
-    // 🌟 核心变化：使用 ModalBottomSheet
+    // 使用 ModalBottomSheet
     if (showDialog) {
         ModalBottomSheet(
             onDismissRequest = {
