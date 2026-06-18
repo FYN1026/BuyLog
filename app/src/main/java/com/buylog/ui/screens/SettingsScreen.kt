@@ -1,5 +1,7 @@
 package com.buylog.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,10 +11,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,7 +26,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.buylog.data.model.PlatformConfig
 import com.buylog.viewmodel.SettingsViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,10 +37,10 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
     val nickname by viewModel.nickname.collectAsState()
     val platformConfigs by viewModel.platformConfigs.collectAsState()
 
-    // 🌟 1. 收集弹窗状态
     val showEditNameDialog by viewModel.showEditNameDialog.collectAsState()
 
-    // 🌟 2. 挂载弹窗组件
+    var selectedPlatformForConfig by remember { mutableStateOf<PlatformConfig?>(null) }
+
     if (showEditNameDialog) {
         EditNicknameDialog(
             currentName = nickname,
@@ -39,6 +48,23 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             onConfirm = { newName ->
                 viewModel.updateNickname(newName)
                 viewModel.closeEditNameDialog()
+            }
+        )
+    }
+
+    selectedPlatformForConfig?.let { config ->
+        PlatformConfigDialog(
+            config = config,
+            onDismiss = { selectedPlatformForConfig = null },
+            onConfirm = { phone, _ -> // 验证码逻辑暂时模拟
+                viewModel.updatePlatformConfig(
+                    config.copy(
+                        phone = phone,
+                        isConfigured = true,
+                        cookieCreatedAt = System.currentTimeMillis()
+                    )
+                )
+                selectedPlatformForConfig = null
             }
         )
     }
@@ -62,7 +88,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             item {
-                // 🌟 3. 把打开弹窗的事件传给头部组件
                 PersonalInfoHeader(
                     nickname = nickname,
                     onEditClick = { viewModel.openEditNameDialog() }
@@ -80,24 +105,20 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
 
             items(platformConfigs) { config ->
                 PlatformConfigCard(
-                    name = config.name,
-                    isConfigured = config.isConfigured,
-                    phone = config.phone,
-                    onClick = { /* TODO: 导航到详情配置页 */ }
+                    config = config,
+                    onConfigClick = { selectedPlatformForConfig = config }
                 )
             }
         }
     }
 }
 
-// 🌟 新增：修改昵称的专用弹窗组件
 @Composable
 fun EditNicknameDialog(
     currentName: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    // 这是一个局部的 UI 状态，用来记录用户正在输入框里敲击的文字
     var inputText by remember { mutableStateOf(currentName) }
 
     AlertDialog(
@@ -125,32 +146,43 @@ fun EditNicknameDialog(
     )
 }
 
-// 修改原有的 Header 组件，接收点击事件
 @Composable
 fun PersonalInfoHeader(nickname: String, onEditClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        )
     ) {
         Row(
             modifier = Modifier.padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(64.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary),
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Person, "Avatar", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(32.dp))
+                Icon(
+                    Icons.Default.Person,
+                    "Avatar",
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(32.dp)
+                )
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(nickname, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text("开发者模式已开启", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    nickname,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
-            // 🌟 触发点击事件
             IconButton(onClick = onEditClick) {
                 Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary)
             }
@@ -159,35 +191,141 @@ fun PersonalInfoHeader(nickname: String, onEditClick: () -> Unit) {
 }
 
 @Composable
-fun PlatformConfigCard(name: String, isConfigured: Boolean, phone: String, onClick: () -> Unit) {
+fun PlatformConfigCard(config: PlatformConfig, onConfigClick: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() }
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(CardDefaults.elevatedShape)
+            .clickable { expanded = !expanded }
+            .animateContentSize()
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.ShoppingCart, name, tint = MaterialTheme.colorScheme.secondary)
+        Column {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.ShoppingCart, config.name, tint = MaterialTheme.colorScheme.secondary)
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(config.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                if (phone.isNotBlank()) {
-                    Text(phone, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val color = if (config.isConfigured) Color(0xFF4CAF50) else Color.Gray
+                    Canvas(Modifier.size(8.dp)) { drawCircle(color) }
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (config.isConfigured) "已配置" else "未配置", style = MaterialTheme.typography.labelMedium)
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        modifier = Modifier.padding(start = 8.dp).size(20.dp)
+                    )
                 }
             }
 
-            // 状态指示灯
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val color = if (isConfigured) Color(0xFF4CAF50) else Color.Gray
-                Canvas(Modifier.size(8.dp)) { drawCircle(color) }
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = if (isConfigured) "已配置" else "未配置",
-                    style = MaterialTheme.typography.labelMedium
-                )
+            AnimatedVisibility(visible = expanded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    HorizontalDivider(thickness = 0.5.dp)
+
+                    DetailRow(label = "配对账号", value = config.phone.ifBlank { "尚未绑定" })
+
+                    val dateStr = if (config.cookieCreatedAt > 0) {
+                        SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(config.cookieCreatedAt))
+                    } else { "无记录" }
+                    DetailRow(label = "配对时间", value = dateStr)
+
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+                        IconButton(
+                            onClick = onConfigClick,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "配置平台",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
+    }
+}
+@Composable
+fun PlatformConfigDialog(
+    config: PlatformConfig,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String) -> Unit
+) {
+    var phone by remember { mutableStateOf(config.phone) }
+    var code by remember { mutableStateOf("") }
+    var countdown by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(countdown) {
+        if (countdown > 0) {
+            kotlinx.coroutines.delay(1000)
+            countdown--
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("${config.name} 配置") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("手机号码") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = code,
+                        onValueChange = { code = it },
+                        label = { Text("验证码") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Button(
+                        onClick = { countdown = 60 },
+                        enabled = countdown == 0 && phone.length == 11,
+                        modifier = Modifier.align(Alignment.CenterVertically).padding(top = 8.dp)
+                    ) {
+                        Text(if (countdown > 0) "${countdown}s" else "获取")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(phone, code) }, enabled = code.isNotBlank()) { Text("确认") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        }
+    )
+}
+
+@Composable
+fun DetailRow(label: String, value: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
     }
 }
