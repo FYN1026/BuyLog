@@ -52,6 +52,7 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding() // 增加状态栏避让，防止内容顶到状态栏下面
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally

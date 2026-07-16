@@ -13,21 +13,18 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.dp
 import com.buylog.ui.components.BottomNavItem
 import com.buylog.ui.components.CapsuleBottomNav
 import com.buylog.ui.screens.HomeScreen
@@ -38,7 +35,10 @@ import com.buylog.viewmodel.HomeViewModel
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +55,22 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     var selectedIndex by remember { mutableStateOf(0) }
+    var isBottomBarVisible by remember { mutableStateOf(true) }
+
+    // 监听滑动方向，控制导航栏显隐
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // available.y < 0 代表向上滑动（手指往上拨，内容往下滚）
+                if (available.y < -10) {
+                    isBottomBarVisible = false
+                } else if (available.y > 10) {
+                    isBottomBarVisible = true
+                }
+                return Offset.Zero
+            }
+        }
+    }
     
     val navItems = remember {
         listOf(
@@ -64,25 +80,35 @@ fun MainScreen() {
         )
     }
 
-    Scaffold(
-        bottomBar = {
-            CapsuleBottomNav(
-                items = navItems,
-                selectedIndex = selectedIndex,
-                onItemSelected = { selectedIndex = it }
-            )
-        }
-    ) { innerPadding ->
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 主内容区域：移除 Scaffold 的约束，让其填满全屏
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
+                .nestedScroll(nestedScrollConnection)
         ) {
             when (selectedIndex) {
                 0 -> HomeScreen()
                 1 -> RecordsScreen()
                 2 -> SettingsScreen()
+            }
+        }
+
+        // 浮动导航栏：手动控制位置和显隐动画
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            AnimatedVisibility(
+                visible = isBottomBarVisible,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+            ) {
+                CapsuleBottomNav(
+                    items = navItems,
+                    selectedIndex = selectedIndex,
+                    onItemSelected = { selectedIndex = it }
+                )
             }
         }
     }
