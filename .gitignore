@@ -18,3 +18,19 @@ Thumbs.db        # Windows 系统
 *.jks
 *.keystore
 keystore.properties
+# KMP / Android build
+build/
+.gradle/
+*.iml
+.idea/
+local.properties
+
+# Web
+kotlin-js-store/
+node_modules/
+.kotlin/
+
+# iOS
+iosApp/*.xcworkspace/
+iosApp/Pods/
+*.xcuserdata
