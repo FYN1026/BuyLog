@@ -25,6 +25,8 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             api(libs.koin.core)
             api(libs.multiplatform.settings)
+            api(libs.androidx.lifecycle.viewmodel)
+            api(libs.koin.compose.viewmodel)
         }
         androidMain.dependencies {
             implementation(libs.room.runtime)

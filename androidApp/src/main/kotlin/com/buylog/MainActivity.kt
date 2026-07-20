@@ -14,9 +14,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         AndroidPlatformContext.init(applicationContext)
-        startKoin {
-            androidContext(this@MainActivity)
-            modules(androidModule)
+        try {
+            startKoin {
+                androidContext(this@MainActivity)
+                modules(androidModule)
+            }
+        } catch (e: Exception) {
+            // Koin already started
         }
         setContent { App() }
     }

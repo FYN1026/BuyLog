@@ -14,7 +14,8 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
-    buildTypes { release { isMinifyEnabled = true } }
+    buildTypes { release { isMinifyEnabled = true
+                           isShrinkResources = true } }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -25,6 +26,7 @@ android {
 
 dependencies {
     implementation(project(":shared"))
+    implementation(project(":composeApp"))
     implementation(platform("androidx.compose:compose-bom:2024.09.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")

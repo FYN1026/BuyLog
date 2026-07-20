@@ -12,10 +12,6 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val androidModule = module {
-    single { HaodankuApiClient() }
+    includes(sharedModule)
     single<AppDatabase> { createAppDatabase() }
-    single<Settings> { createSettings() }
-    single { SettingsManager(get()) }
-    viewModel { HomeViewModel(get(), get()) }
-    viewModel { SettingsViewModel(get()) }
 }
