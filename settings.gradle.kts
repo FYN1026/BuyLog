@@ -30,3 +30,4 @@ rootProject.name = "BuyLog"
 include(":shared")
 include(":androidApp")
 include(":webApp")
+include(":composeApp")
