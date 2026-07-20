@@ -57,12 +57,15 @@ actual class HaodankuApiClient actual constructor() {
                     println("DEBUG: fetchProductInfo product = $product")
                     product
                 } else {
-                    println("DEBUG: fetchProductInfo failed, code = ${jsonRes.optInt("code")}, msg = ${jsonRes.optString("msg")}")
-                    null
+                    val msg = jsonRes.optString("msg")
+                    val errorMsg = msg.ifBlank { "解析失败，该商品已下架或不在联盟推广计划内！" }
+                    println("DEBUG: fetchProductInfo failed, code = ${jsonRes.optInt("code")}, msg = $errorMsg")
+                    throw Exception(errorMsg)
                 }
             }
         } catch (e: Exception) {
-            null
+            println("DEBUG: fetchProductInfo exception: ${e.message}")
+            throw e
         }
     }
 }

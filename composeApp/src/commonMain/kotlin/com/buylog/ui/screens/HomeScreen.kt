@@ -35,6 +35,7 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
     val showProductCard by viewModel.showProductCard.collectAsState()
     val parsedProduct by viewModel.parsedProduct.collectAsState()
     val isParsing by viewModel.isParsing.collectAsState()
+    val parseError by viewModel.parseError.collectAsState()
     var manualUrl by remember { mutableStateOf("") }
     val topPadding by animateDpAsState(
         targetValue = if (showProductCard) 0.dp else 120.dp,
@@ -192,6 +193,25 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
             }
         }
         ClipboardDialog(viewModel = viewModel)
+        ParseErrorDialog(viewModel = viewModel)
+    }
+}
+
+@Composable
+fun ParseErrorDialog(viewModel: HomeViewModel) {
+    val parseError by viewModel.parseError.collectAsState()
+    if (parseError != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearParseError() },
+            title = { Text("解析失败") },
+            text = { Text(parseError ?: "") },
+            confirmButton = {
+                Button(onClick = { viewModel.clearParseError() }) {
+                    Text("确定")
+                }
+            },
+            shape = RoundedCornerShape(28.dp)
+        )
     }
 }
 

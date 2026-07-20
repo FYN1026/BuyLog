@@ -26,6 +26,8 @@ class HomeViewModel(
     val showProductCard: StateFlow<Boolean> = _showProductCard.asStateFlow()
     private val _isParsing = MutableStateFlow(false)
     val isParsing: StateFlow<Boolean> = _isParsing.asStateFlow()
+    private val _parseError = MutableStateFlow<String?>(null)
+    val parseError: StateFlow<String?> = _parseError.asStateFlow()
     private var lastProcessedLink: String? = null
 
     fun checkClipboardOnResume() {
@@ -36,17 +38,42 @@ class HomeViewModel(
         }
     }
 
-    fun dismissDialog() { _showClipboardDialog.value = false; lastProcessedLink = _detectedLink.value }
-    fun confirmParse() { _showClipboardDialog.value = false; lastProcessedLink = _detectedLink.value; parseUrl(_detectedLink.value) }
+    fun dismissDialog() {
+        _showClipboardDialog.value = false; lastProcessedLink = _detectedLink.value
+    }
+
+    fun confirmParse() {
+        _showClipboardDialog.value = false; lastProcessedLink = _detectedLink.value; parseUrl(
+            _detectedLink.value
+        )
+    }
+
     fun parseUrl(url: String) {
         if (url.isBlank()) return
         viewModelScope.launch {
             _isParsing.value = true
+            _parseError.value = null
             try {
                 val product = apiClient.fetchProductInfo(url)
-                if (product != null) { _parsedProduct.value = product; _showProductCard.value = true }
-            } finally { _isParsing.value = false }
+                if (product != null) {
+                    _parsedProduct.value = product
+                    _showProductCard.value = true
+                } else {
+                    _parseError.value = "解析失败，无法获取商品信息"
+                }
+            } catch (e: Exception) {
+                _parseError.value = e.message ?: "解析失败，请检查网络或链接是否正确"
+            } finally {
+                _isParsing.value = false
+            }
         }
     }
-    fun closeProductCard() { _showProductCard.value = false }
+
+    fun clearParseError() {
+        _parseError.value = null
+    }
+
+    fun closeProductCard() {
+        _showProductCard.value = false
+    }
 }
