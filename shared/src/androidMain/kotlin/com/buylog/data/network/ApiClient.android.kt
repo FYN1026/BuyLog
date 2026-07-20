@@ -45,15 +45,21 @@ actual class HaodankuApiClient actual constructor() {
                 val jsonRes = JSONObject(result ?: "")
                 if (jsonRes.optInt("code") == 200) {
                     val data = jsonRes.getJSONObject("data")
-                    Product(
+                    val images = data.optString("images")
+                    val product = Product(
                         title = data.optString("item_title"),
                         imageUrl = data.optString("item_pic"),
                         productUrl = data.optString("item_url"),
                         platform = if (data.optInt("plat_type") == 1) "淘宝" else "京东",
                         price = data.optString("item_end_price"),
-                        images = data.optString("images")
+                        images = images
                     )
-                } else null
+                    println("DEBUG: fetchProductInfo product = $product")
+                    product
+                } else {
+                    println("DEBUG: fetchProductInfo failed, code = ${jsonRes.optInt("code")}, msg = ${jsonRes.optString("msg")}")
+                    null
+                }
             }
         } catch (e: Exception) {
             null

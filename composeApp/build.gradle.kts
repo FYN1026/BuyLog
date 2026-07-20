@@ -33,6 +33,11 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.kotlinx.datetime)
         }
+        val androidMain by getting {
+            dependencies {
+                implementation(libs.coil.network.okhttp)
+            }
+        }
         iosMain.dependencies {
         }
     }

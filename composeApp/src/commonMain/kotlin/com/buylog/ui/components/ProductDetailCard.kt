@@ -71,47 +71,116 @@ fun ProductDetailCard(
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 40.dp)
         ) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("解析结果", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, contentDescription = "Close") }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "解析结果",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Close"
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
-                AsyncImage(model = product.imageUrl, contentDescription = null, modifier = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
+                AsyncImage(
+                    model = product.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(product.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        product.title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(4.dp)) {
-                            Text(product.platform, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                product.platform,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("¥${product.price}", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.ExtraBold)
+                        Text(
+                            "¥${product.price}",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.ExtraBold
+                        )
                     }
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
-            Text("选择要保存的图片 (${selectedImages.size}/${images.size + 1})", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                "选择要保存的图片 (${selectedImages.size}/${images.size + 1})",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Spacer(modifier = Modifier.height(12.dp))
             val allImages = remember(product) { listOf(product.imageUrl) + images }
-            LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.heightIn(max = 300.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier.heightIn(max = 300.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 items(allImages) { url ->
                     val isSelected = selectedImages.contains(url)
                     Box(
                         modifier = Modifier.aspectRatio(1f).clip(RoundedCornerShape(8.dp))
-                            .border(2.dp, if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent, RoundedCornerShape(8.dp))
-                            .clickable { if (isSelected) selectedImages.remove(url) else selectedImages.add(url) }
+                            .border(
+                                2.dp,
+                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .clickable {
+                                if (isSelected) selectedImages.remove(url) else selectedImages.add(
+                                    url
+                                )
+                            }
                     ) {
-                        AsyncImage(model = url, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        AsyncImage(
+                            model = url,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
                         if (isSelected) {
-                            Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(20.dp))
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+                                    .size(20.dp)
+                            )
                         }
                     }
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
-            Button(onClick = { onConfirm(selectedImages.toList()) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+            Button(
+                onClick = { onConfirm(selectedImages.toList()) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
                 Text("保存商品记录", modifier = Modifier.padding(vertical = 4.dp))
             }
         }
