@@ -27,6 +27,7 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.materialIconsExtended)
+            implementation(compose.components.resources)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -41,6 +42,11 @@ kotlin {
         iosMain.dependencies {
         }
     }
+}
+
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.buylog.composeapp.resources"
 }
 
 android {
